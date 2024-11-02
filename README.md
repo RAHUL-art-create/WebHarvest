@@ -11,7 +11,7 @@ A powerful Chrome extension for extracting webpage content with preserved struct
 -  Maintains original layout and styling
 
 ## Installation
-1. Download the latest release from the [Releases](https://github.com/yourusername/WebHarvest/releases) page
+1. Download the latest release from the [Releases](https://github.com/RAHUL-art-create/WebHarvest/releases) page
 2. Unzip the downloaded file
 3. Open Chrome and go to `chrome://extensions/`
 4. Enable "Developer mode" in the top right
