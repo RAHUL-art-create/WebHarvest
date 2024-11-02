@@ -41,3 +41,20 @@ npm-debug.log*
 # Temporary files
 *.tmp
 *.temp
+
+# Security files
+protection.js
+keys/
+.env
+
+# System files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.idea/
+.vscode/
+
+# Build files
+dist/
+build/
