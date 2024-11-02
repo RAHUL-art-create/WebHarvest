@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>WebHarvest</title>
+  <style>
+    :root {
+      --primary-color: #8B5CF6;
+      --hover-color: #7C3AED;
+      --bg-color: #1E1E1E;
+      --text-color: #E5E7EB;
+      --border-color: #4B5563;
+      --border-radius: 12px;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      width: 450px;
+      padding: 20px;
+      font-family: 'Inter', Arial, sans-serif;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: #2D2D2D;
+      padding: 20px;
+      border-radius: var(--border-radius);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .logo {
+      width: 24px;
+      height: 24px;
+    }
+
+    h1 {
+      font-size: 20px;
+      margin: 0;
+      color: var(--primary-color);
+      display: flex;
+      align-items: center;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 8px;
+      justify-content: space-between;
+    }
+
+    button {
+      flex: 1;
+      padding: 8px 16px;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.2s ease;
+    }
+
+    button:disabled {
+      background-color: #4B5563;
+      cursor: not-allowed;
+    }
+
+    button:hover:not(:disabled) {
+      background-color: var(--hover-color);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 3px;
+      margin: 10px 0;
+    }
+
+    .tab {
+      padding: 6px 12px;
+      background-color: #363636;
+      cursor: pointer;
+      border-radius: var(--border-radius) var(--border-radius) 0 0;
+      font-size: 12px;
+      transition: all 0.2s ease;
+    }
+
+    .tab.active {
+      background-color: var(--primary-color);
+      color: white;
+    }
+
+    #results {
+      white-space: pre;
+      background-color: #1A1A1A;
+      color: #E5E7EB;
+      padding: 15px;
+      border-radius: var(--border-radius);
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+      height: 300px;
+      overflow-y: auto;
+      font-family: 'Fira Code', 'Consolas', monospace;
+      font-size: 12px;
+      border: 1px solid var(--border-color);
+      line-height: 1.5;
+    }
+
+    .checkbox-group {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      padding: 15px;
+      background: #363636;
+      border-radius: var(--border-radius);
+      border: 1px solid var(--border-color);
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #E5E7EB;
+    }
+
+    .checkbox-item input[type="checkbox"] {
+      accent-color: var(--primary-color);
+    }
+
+    .notification {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      padding: 8px 16px;
+      border-radius: var(--border-radius);
+      color: white;
+      font-size: 12px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .notification.success {
+      background-color: var(--primary-color);
+      opacity: 1;
+    }
+
+    .notification.error {
+      background-color: #EF4444;
+      opacity: 1;
+    }
+
+    .status {
+      color: #9CA3AF;
+      font-style: italic;
+      font-size: 12px;
+      min-height: 20px;
+    }
+
+    /* Code syntax highlighting */
+    .html-content { color: #9ECBFF; }
+    .css-content { color: #B392F0; }
+    .js-content { color: #F97583; }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #2D2D2D;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--primary-color);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--hover-color);
+    }
+
+    /* Add watermark styles */
+    .watermark {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      font-size: 12px;
+      color: rgba(139, 92, 246, 0.3);
+      pointer-events: none;
+      user-select: none;
+      font-family: 'Inter', Arial, sans-serif;
+      z-index: 1000;
+    }
+
+    /* Add tooltip styles */
+    [data-tooltip] {
+      position: relative;
+    }
+
+    [data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 5px 10px;
+      background: var(--primary-color);
+      color: white;
+      border-radius: 4px;
+      font-size: 11px;
+      white-space: nowrap;
+      z-index: 1000;
+    }
+
+    /* Add loading animation */
+    .loading {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      border-radius: var(--border-radius);
+    }
+
+    .loading.active {
+      display: flex;
+    }
+
+    .loading::after {
+      content: '';
+      width: 30px;
+      height: 30px;
+      border: 3px solid var(--primary-color);
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Add version number */
+    .version {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      font-size: 10px;
+      color: #9CA3AF;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <svg width="24" height="24" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" class="logo">
+        <defs>
+          <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:1" />
+          </linearGradient>
+        </defs>
+        <rect x="10" y="10" width="108" height="108" rx="20" fill="url(#grad)" />
+        <path d="M40 64 L60 84 L88 44" stroke="white" stroke-width="12" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M34 44 L44 34 L54 44" stroke="white" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M74 84 L84 94 L94 84" stroke="white" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <h1>WebHarvest</h1>
+    </div>
+    <div class="checkbox-group">
+      <label class="checkbox-item" data-tooltip="Extract HTML structure">
+        <input type="checkbox" id="extract-html" checked> HTML
+      </label>
+      <label class="checkbox-item" data-tooltip="Extract CSS styles">
+        <input type="checkbox" id="extract-css" checked> CSS
+      </label>
+      <label class="checkbox-item" data-tooltip="Extract JavaScript code">
+        <input type="checkbox" id="extract-js" checked> JavaScript
+      </label>
+      <label class="checkbox-item" data-tooltip="Extract computed styles">
+        <input type="checkbox" id="extract-computed"> Computed
+      </label>
+    </div>
+    <div class="button-group">
+      <button id="extract" data-tooltip="Extract selected content">Extract</button>
+      <button id="copy" disabled data-tooltip="Copy to clipboard">Copy</button>
+      <button id="download" disabled data-tooltip="Download as file">Download</button>
+      <button id="preview" disabled data-tooltip="Preview in new tab">Preview</button>
+    </div>
+    <div class="tabs">
+      <div class="tab active" data-type="all" data-tooltip="Show all content">All</div>
+      <div class="tab" data-type="html" data-tooltip="Show HTML only">HTML</div>
+      <div class="tab" data-type="css" data-tooltip="Show CSS only">CSS</div>
+      <div class="tab" data-type="js" data-tooltip="Show JavaScript only">JS</div>
+    </div>
+    <div id="results">Select content and click "Extract" to start...</div>
+    <div class="status" id="status"></div>
+    <div class="loading" id="loading"></div>
+  </div>
+  <div class="watermark" data-protection="R4HUL-2024">@ Made By Rahul</div>
+  <div class="version">v1.0.0</div>
+  <div id="notification" class="notification"></div>
+  <script src="popup.js"></script>
+  <script>
+    // Protection mechanism
+    (function() {
+      const protectionKey = 'R4HUL-2024';
+      const watermark = document.querySelector('.watermark');
+      
+      function verifyWatermark() {
+        const currentProtection = watermark.getAttribute('data-protection');
+        if (currentProtection !== protectionKey || 
+            watermark.textContent !== '@ Made By Rahul') {
+          // Reset if tampered
+          watermark.textContent = '@ Made By Rahul';
+          watermark.setAttribute('data-protection', protectionKey);
+          
+          // Disable functionality if tampered
+          document.querySelectorAll('button').forEach(btn => {
+            btn.disabled = true;
+          });
+          
+          console.error('Unauthorized modification detected');
+        }
+      }
+
+      // Check periodically
+      setInterval(verifyWatermark, 1000);
+      
+      // Prevent modifications
+      watermark.addEventListener('DOMCharacterDataModified', verifyWatermark);
+      watermark.addEventListener('DOMSubtreeModified', verifyWatermark);
+      watermark.addEventListener('DOMNodeInserted', verifyWatermark);
+      watermark.addEventListener('DOMNodeRemoved', verifyWatermark);
+      
+      // Make it harder to modify through devtools
+      Object.freeze(watermark);
+      
+    })();
+  </script>
+</body>
+</html>

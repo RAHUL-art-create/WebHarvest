@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "WebHarvest",
+  "version": "1.0",
+  "description": "Extract and analyze webpage source code with preserved structure",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "clipboardWrite",
+    "downloads",
+    "tabs"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
