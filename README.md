@@ -1,5 +1,11 @@
 # WebHarvest
-A powerful Chrome extension for extracting webpage content with preserved structure and styling. `Educational Purpose ONLY!`
+A powerful Chrome extension for extracting webpage content with preserved structure and styling. `**Educational Purpose ONLY!**`
+
+## Technical Details
+- Built with vanilla JavaScript
+- Uses Chrome Extension Manifest V3
+- Framework detection through DOM analysis
+- Real-time code extraction and processing
 
 ## Features
 -  Extract complete HTML structure
@@ -27,3 +33,8 @@ A powerful Chrome extension for extracting webpage content with preserved struct
 3. Click "Extract"
 4. Use the tabs to view different types of content
 5. Copy, download, or preview the extracted code
+
+## Known Issues
+- Some frameworks may require specific conditions for detection
+- External script content may not be available due to CORS restrictions
+- Framework version detection might be limited in some cases
