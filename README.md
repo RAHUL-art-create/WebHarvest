@@ -1,5 +1,5 @@
 # WebHarvest
-A powerful Chrome extension for extracting webpage content with preserved structure and styling.
+A powerful Chrome extension for extracting webpage content with preserved structure and styling. `Educational Purpose ONLY!`
 
 ## Features
 -  Extract complete HTML structure
