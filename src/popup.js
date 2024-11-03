@@ -118,6 +118,50 @@ function displayData(type) {
   
   try {
     switch (type) {
+      case 'js':
+        content = extractedData.scripts
+          .filter(script => {
+            const isFrameworkScript = extractedData.frameworks.some(framework =>
+              script.src?.toLowerCase().includes(framework.name.toLowerCase()) ||
+              script.content?.includes(framework.name)
+            );
+            return !isFrameworkScript;
+          })
+          .map(script => {
+            if (script.type === 'external') {
+              return `/* External script: ${script.src} */\n${script.content || '// Content not available'}`;
+            }
+            return `/* Inline script */\n${script.content}`;
+          }).join('\n\n');
+        break;
+
+      case 'react':
+      case 'vue':
+      case 'angular':
+      case 'jquery':
+      case 'bootstrap':
+      case 'tailwind':
+        const framework = extractedData.frameworks.find(f => 
+          f.name.toLowerCase() === type
+        );
+        if (framework) {
+          content = `/* ${framework.name} v${framework.version} */\n\n`;
+          const frameworkScripts = extractedData.scripts
+            .filter(script => 
+              script.src?.toLowerCase().includes(type) || 
+              script.content?.includes(framework.name)
+            );
+          
+          if (frameworkScripts.length > 0) {
+            content += frameworkScripts
+              .map(script => script.content || `// External: ${script.src}`)
+              .join('\n\n');
+          } else {
+            content += `// No ${framework.name}-specific code found`;
+          }
+        }
+        break;
+
       case 'html':
         content = extractedData.html;
         break;
@@ -156,6 +200,69 @@ ${extractedData.html}
   }
 }
 
+// Add this function to create framework checkboxes
+function createFrameworkCheckboxes(frameworks) {
+  const frameworkCheckboxes = document.getElementById('framework-checkboxes');
+  frameworkCheckboxes.innerHTML = '';
+
+  frameworks.forEach(framework => {
+    const label = document.createElement('label');
+    label.className = 'framework-checkbox';
+    label.setAttribute('data-tooltip', `Extract ${framework.name} code`);
+    
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = `extract-${framework.name.toLowerCase()}`;
+    checkbox.checked = true; // Check by default
+    
+    const text = document.createTextNode(
+      `${framework.name} `
+    );
+    
+    const version = document.createElement('span');
+    version.className = 'framework-version';
+    version.textContent = framework.version;
+    
+    label.appendChild(checkbox);
+    label.appendChild(text);
+    label.appendChild(version);
+    frameworkCheckboxes.appendChild(label);
+
+    // Add change event listener
+    checkbox.addEventListener('change', () => {
+      const tab = document.querySelector(
+        `.tab[data-type="${framework.name.toLowerCase()}"]`
+      );
+      if (tab) {
+        tab.style.display = checkbox.checked ? '' : 'none';
+      }
+    });
+  });
+}
+
+// Add this function to create framework tabs
+function createFrameworkTabs(frameworks) {
+  const frameworkTabs = document.getElementById('framework-tabs');
+  frameworkTabs.innerHTML = '';
+
+  frameworks.forEach(framework => {
+    const tab = document.createElement('div');
+    tab.className = 'framework-tab';
+    tab.dataset.type = framework.name.toLowerCase();
+    tab.innerHTML = `${framework.name}<span class="framework-version">${framework.version}</span>`;
+    
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab, .framework-tab').forEach(t => 
+        t.classList.remove('active')
+      );
+      tab.classList.add('active');
+      displayData(framework.name.toLowerCase());
+    });
+
+    frameworkTabs.appendChild(tab);
+  });
+}
+
 // Listen for messages from content script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.error) {
@@ -164,6 +271,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
   
   extractedData = request;
+  
+  // Create framework checkboxes and tabs if frameworks were detected
+  if (request.frameworks && request.frameworks.length > 0) {
+    createFrameworkCheckboxes(request.frameworks);
+    createFrameworkTabs(request.frameworks);
+  }
+  
   const activeTab = document.querySelector('.tab.active');
   displayData(activeTab.dataset.type);
   updateButtonStates(true);
