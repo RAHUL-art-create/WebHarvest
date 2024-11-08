@@ -10,7 +10,8 @@ A powerful Chrome extension for extracting webpage content with preserved struct
 ## Features
 -  Extract complete HTML structure
 -  Capture CSS styles (inline, external, and computed)
--  Extract JavaScript code
+-  Extract JavaScript code (inline, external)
+-  Automatic Framework Detection & Extraction 
 -  Preview extracted content
 -  Copy to clipboard
 -  Download as files
