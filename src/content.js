@@ -272,6 +272,203 @@ async function extractJavaScript() {
   return scripts;
 }
 
+// Add this function to extract complete animation data
+async function extractAnimationData() {
+  const animations = {
+    lottie: [],
+    gsap: [],
+    anime: [],
+    threeJs: [],
+    css: []
+  };
+
+  // Extract Lottie animations with their complete data
+  document.querySelectorAll('lottie-player, [data-lottie]').forEach(async element => {
+    try {
+      const src = element.getAttribute('src');
+      if (src) {
+        const response = await fetch(src);
+        const animationData = await response.json();
+        animations.lottie.push({
+          element: element.outerHTML,
+          data: animationData,
+          config: {
+            container: element,
+            renderer: element.getAttribute('renderer') || 'svg',
+            loop: element.hasAttribute('loop'),
+            autoplay: element.hasAttribute('autoplay'),
+            path: src
+          }
+        });
+      }
+    } catch (e) {
+      console.error('Lottie extraction error:', e);
+    }
+  });
+
+  // Extract GSAP animations with their complete timelines and configurations
+  if (window.gsap) {
+    const gsapElements = document.querySelectorAll('[data-gsap]');
+    gsapElements.forEach(element => {
+      const timeline = window.gsap.getById(element.getAttribute('data-gsap'));
+      if (timeline) {
+        animations.gsap.push({
+          element: element.outerHTML,
+          timeline: timeline.getChildren(),
+          vars: timeline.vars,
+          duration: timeline.duration(),
+          code: extractGSAPCode(element)
+        });
+      }
+    });
+  }
+
+  // Extract Anime.js animations
+  if (window.anime) {
+    document.querySelectorAll('[data-anime]').forEach(element => {
+      const animeInstance = window.anime.get(element);
+      if (animeInstance) {
+        animations.anime.push({
+          element: element.outerHTML,
+          config: animeInstance,
+          targets: animeInstance.targets,
+          code: extractAnimeCode(element)
+        });
+      }
+    });
+  }
+
+  // Extract Three.js scenes
+  if (window.THREE) {
+    document.querySelectorAll('canvas').forEach(canvas => {
+      const renderer = canvas._threeRenderer;
+      if (renderer) {
+        const scene = renderer.scenes?.[0];
+        if (scene) {
+          animations.threeJs.push({
+            canvas: canvas.outerHTML,
+            scene: extractThreeJSScene(scene),
+            renderer: {
+              parameters: renderer.parameters,
+              info: renderer.info
+            },
+            code: extractThreeJSCode(canvas)
+          });
+        }
+      }
+    });
+  }
+
+  // Extract CSS Animations and Transitions
+  document.querySelectorAll('*').forEach(element => {
+    const style = window.getComputedStyle(element);
+    if (style.animation !== 'none' || style.transition !== 'none') {
+      animations.css.push({
+        element: element.outerHTML,
+        animation: style.animation,
+        transition: style.transition,
+        keyframes: extractKeyframes(style.animationName),
+        computedStyles: extractRelevantStyles(element)
+      });
+    }
+  });
+
+  return animations;
+}
+
+// Helper functions for code extraction
+function extractGSAPCode(element) {
+  const scripts = Array.from(document.scripts);
+  let gsapCode = '';
+  
+  scripts.forEach(script => {
+    if (script.textContent.includes('gsap') && 
+        script.textContent.includes(element.id || element.className)) {
+      gsapCode += script.textContent;
+    }
+  });
+  
+  return gsapCode;
+}
+
+function extractAnimeCode(element) {
+  const scripts = Array.from(document.scripts);
+  let animeCode = '';
+  
+  scripts.forEach(script => {
+    if (script.textContent.includes('anime') && 
+        script.textContent.includes(element.id || element.className)) {
+      animeCode += script.textContent;
+    }
+  });
+  
+  return animeCode;
+}
+
+function extractThreeJSScene(scene) {
+  return {
+    children: scene.children.map(child => ({
+      type: child.type,
+      geometry: child.geometry?.parameters,
+      material: child.material?.parameters,
+      position: child.position,
+      rotation: child.rotation,
+      scale: child.scale
+    })),
+    background: scene.background,
+    fog: scene.fog,
+    environment: scene.environment
+  };
+}
+
+function extractThreeJSCode(canvas) {
+  const scripts = Array.from(document.scripts);
+  let threeCode = '';
+  
+  scripts.forEach(script => {
+    if (script.textContent.includes('THREE') && 
+        script.textContent.includes(canvas.id || canvas.className)) {
+      threeCode += script.textContent;
+    }
+  });
+  
+  return threeCode;
+}
+
+function extractKeyframes(animationName) {
+  for (const sheet of document.styleSheets) {
+    try {
+      for (const rule of sheet.cssRules) {
+        if (rule.type === CSSRule.KEYFRAMES_RULE && 
+            rule.name === animationName) {
+          return rule.cssText;
+        }
+      }
+    } catch (e) {
+      console.warn('Could not access stylesheet rules', e);
+    }
+  }
+  return null;
+}
+
+function extractRelevantStyles(element) {
+  const style = window.getComputedStyle(element);
+  const relevantProperties = [
+    'animation', 'animation-delay', 'animation-direction',
+    'animation-duration', 'animation-fill-mode', 'animation-iteration-count',
+    'animation-name', 'animation-play-state', 'animation-timing-function',
+    'transition', 'transition-delay', 'transition-duration',
+    'transition-property', 'transition-timing-function',
+    'transform', 'transform-origin', 'transform-style'
+  ];
+  
+  return relevantProperties.reduce((styles, prop) => {
+    styles[prop] = style.getPropertyValue(prop);
+    return styles;
+  }, {});
+}
+
+// Update the main extractContent function to include animation data
 async function extractContent() {
   try {
     // Function to make URLs absolute
@@ -447,13 +644,17 @@ async function extractContent() {
     // Extract JavaScript
     const scripts = await extractJavaScript();
 
-    // Send the complete data
+    // Extract animations
+    const animations = await extractAnimationData();
+
+    // Send the complete data including animations
     chrome.runtime.sendMessage({
       doctype,
       html: htmlElement.outerHTML,
       styles,
       scripts,
       frameworks,
+      animations, // Add the animations data
       url: window.location.href,
       title: document.title
     });

@@ -459,3 +459,372 @@ function getFrameworkCDN(frameworkName, version) {
 
   return cdnLinks[frameworkName] || { css: '', js: '' };
 }
+
+function createPreviewContent(data) {
+  const previewContainer = document.createElement('div');
+  previewContainer.className = 'preview-container';
+
+  // Add frameworks and animations section
+  if (data.frameworks && data.frameworks.length > 0) {
+    const frameworksSection = document.createElement('div');
+    frameworksSection.className = 'frameworks-section';
+    
+    data.frameworks.forEach(framework => {
+      if (isAnimationFramework(framework)) {
+        const animationPreview = createAnimationPreview(framework, data);
+        frameworksSection.appendChild(animationPreview);
+      }
+    });
+
+    previewContainer.appendChild(frameworksSection);
+  }
+
+  // Create animation playground
+  const animationPlayground = createAnimationPlayground(data);
+  previewContainer.appendChild(animationPlayground);
+
+  return previewContainer;
+}
+
+function isAnimationFramework(framework) {
+  const animationFrameworks = ['GSAP', 'Anime.js', 'Lottie', 'Three.js'];
+  return animationFrameworks.includes(framework.name);
+}
+
+function createAnimationPreview(framework, data) {
+  const container = document.createElement('div');
+  container.className = 'animation-preview-card';
+
+  const header = document.createElement('div');
+  header.className = 'preview-header';
+  header.innerHTML = `
+    <h3>${framework.name}</h3>
+    <span class="version">v${framework.version}</span>
+  `;
+
+  const previewArea = document.createElement('div');
+  previewArea.className = 'preview-area';
+
+  // Create animation controls
+  const controls = document.createElement('div');
+  controls.className = 'animation-controls';
+  controls.innerHTML = `
+    <button class="play-btn">Play</button>
+    <button class="pause-btn">Pause</button>
+    <button class="reset-btn">Reset</button>
+  `;
+
+  // Handle different animation types
+  switch (framework.name) {
+    case 'Lottie':
+      createLottiePreview(previewArea, data);
+      break;
+    case 'GSAP':
+      createGSAPPreview(previewArea, data);
+      break;
+    case 'Anime.js':
+      createAnimePreview(previewArea, data);
+      break;
+    case 'Three.js':
+      createThreeJSPreview(previewArea, data);
+      break;
+  }
+
+  container.appendChild(header);
+  container.appendChild(previewArea);
+  container.appendChild(controls);
+
+  return container;
+}
+
+function createAnimationPlayground(data) {
+  const playground = document.createElement('div');
+  playground.className = 'animation-playground';
+
+  // Add CSS Animations
+  const cssAnimations = extractCSSAnimations(data);
+  if (cssAnimations.length > 0) {
+    const cssSection = document.createElement('div');
+    cssSection.className = 'css-animations-section';
+    
+    cssAnimations.forEach(animation => {
+      const animationPreview = createCSSAnimationPreview(animation);
+      cssSection.appendChild(animationPreview);
+    });
+
+    playground.appendChild(cssSection);
+  }
+
+  // Add interactive timeline
+  const timeline = createAnimationTimeline(data);
+  playground.appendChild(timeline);
+
+  return playground;
+}
+
+function createLottiePreview(container, data) {
+  // Find Lottie animations in the extracted data
+  const lottieData = extractLottieAnimations(data);
+  
+  lottieData.forEach(animation => {
+    const lottieContainer = document.createElement('div');
+    lottieContainer.className = 'lottie-container';
+    
+    // Create Lottie player
+    const player = document.createElement('lottie-player');
+    player.src = animation.src;
+    player.style.width = '100%';
+    player.style.height = '100%';
+    player.setAttribute('background', 'transparent');
+    player.setAttribute('speed', '1');
+    player.setAttribute('loop', '');
+    player.setAttribute('autoplay', '');
+
+    lottieContainer.appendChild(player);
+    container.appendChild(lottieContainer);
+  });
+}
+
+function createGSAPPreview(container, data) {
+  const gsapAnimations = extractGSAPAnimations(data);
+  
+  gsapAnimations.forEach(animation => {
+    const gsapContainer = document.createElement('div');
+    gsapContainer.className = 'gsap-container';
+    
+    // Recreate GSAP animation
+    const element = document.createElement('div');
+    element.className = 'gsap-element';
+    element.innerHTML = animation.targetHTML || '<div class="gsap-box"></div>';
+
+    // Apply GSAP animation
+    const animationCode = animation.code;
+    const script = document.createElement('script');
+    script.textContent = `
+      try {
+        ${animationCode}
+      } catch (e) {
+        console.error('GSAP animation error:', e);
+      }
+    `;
+
+    gsapContainer.appendChild(element);
+    gsapContainer.appendChild(script);
+    container.appendChild(gsapContainer);
+  });
+}
+
+function createAnimePreview(container, data) {
+  const animeAnimations = extractAnimeAnimations(data);
+  
+  animeAnimations.forEach(animation => {
+    const animeContainer = document.createElement('div');
+    animeContainer.className = 'anime-container';
+    
+    // Recreate Anime.js animation
+    const element = document.createElement('div');
+    element.className = 'anime-element';
+    element.innerHTML = animation.targetHTML || '<div class="anime-box"></div>';
+
+    // Apply Anime.js animation
+    const script = document.createElement('script');
+    script.textContent = `
+      try {
+        ${animation.code}
+      } catch (e) {
+        console.error('Anime.js animation error:', e);
+      }
+    `;
+
+    animeContainer.appendChild(element);
+    animeContainer.appendChild(script);
+    container.appendChild(animeContainer);
+  });
+}
+
+function createThreeJSPreview(container, data) {
+  const threeScenes = extractThreeJSScenes(data);
+  
+  threeScenes.forEach(scene => {
+    const threeContainer = document.createElement('div');
+    threeContainer.className = 'threejs-container';
+    
+    // Create canvas for Three.js
+    const canvas = document.createElement('canvas');
+    canvas.className = 'threejs-canvas';
+    
+    // Initialize Three.js scene
+    const script = document.createElement('script');
+    script.textContent = `
+      try {
+        ${scene.code}
+      } catch (e) {
+        console.error('Three.js scene error:', e);
+      }
+    `;
+
+    threeContainer.appendChild(canvas);
+    threeContainer.appendChild(script);
+    container.appendChild(threeContainer);
+  });
+}
+
+function extractCSSAnimations(data) {
+  const animations = [];
+  
+  // Extract keyframe animations
+  data.styles.forEach(style => {
+    const keyframeRegex = /@keyframes\s+([^\s{]+)\s*{([^}]+)}/g;
+    let match;
+    
+    while ((match = keyframeRegex.exec(style.content)) !== null) {
+      animations.push({
+        name: match[1],
+        keyframes: match[2],
+        type: 'keyframe'
+      });
+    }
+  });
+
+  // Extract transition animations
+  document.querySelectorAll('[style*="transition"], [style*="animation"]').forEach(element => {
+    const styles = window.getComputedStyle(element);
+    if (styles.transition !== 'all 0s ease 0s' || styles.animation !== 'none') {
+      animations.push({
+        element: element.cloneNode(true),
+        transition: styles.transition,
+        animation: styles.animation,
+        type: 'transition'
+      });
+    }
+  });
+
+  return animations;
+}
+
+function createAnimationTimeline(data) {
+  const timeline = document.createElement('div');
+  timeline.className = 'animation-timeline';
+
+  // Create timeline markers
+  const markers = document.createElement('div');
+  markers.className = 'timeline-markers';
+  
+  // Add animation events to timeline
+  data.scripts.forEach(script => {
+    if (script.animationRelated.hasAnimations) {
+      const marker = document.createElement('div');
+      marker.className = 'timeline-marker';
+      marker.setAttribute('data-animation-type', getAnimationType(script));
+      markers.appendChild(marker);
+    }
+  });
+
+  timeline.appendChild(markers);
+  return timeline;
+}
+
+// Helper functions to extract specific animation data
+function extractLottieAnimations(data) {
+  const animations = [];
+  data.scripts.forEach(script => {
+    if (script.animationRelated.hasLottie) {
+      // Extract Lottie animation data
+      const lottieDataRegex = /lottie\.loadAnimation\({([^}]+)}\)/g;
+      let match;
+      while ((match = lottieDataRegex.exec(script.content)) !== null) {
+        try {
+          const animationData = eval(`({${match[1]}})`);
+          animations.push(animationData);
+        } catch (e) {
+          console.error('Error parsing Lottie animation:', e);
+        }
+      }
+    }
+  });
+  return animations;
+}
+
+// Add similar extraction functions for GSAP, Anime.js, and Three.js
+// ... (implementation of other extraction functions)
+
+// Add styles for the preview
+const style = document.createElement('style');
+style.textContent = `
+  .preview-container {
+    padding: 20px;
+    background: #f5f5f5;
+    border-radius: 8px;
+  }
+
+  .animation-preview-card {
+    background: white;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .preview-area {
+    min-height: 200px;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .animation-controls {
+    display: flex;
+    gap: 10px;
+  }
+
+  .animation-controls button {
+    padding: 5px 15px;
+    border-radius: 4px;
+    border: none;
+    background: #673AB7;
+    color: white;
+    cursor: pointer;
+  }
+
+  .animation-controls button:hover {
+    background: #9C27B0;
+  }
+
+  .animation-timeline {
+    height: 60px;
+    background: #fff;
+    border-radius: 4px;
+    margin-top: 20px;
+    position: relative;
+  }
+
+  .timeline-markers {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 100%;
+    height: 2px;
+    background: #eee;
+  }
+
+  .timeline-marker {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: #673AB7;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+  }
+`;
+
+document.head.appendChild(style);

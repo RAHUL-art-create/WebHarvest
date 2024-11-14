@@ -264,6 +264,9 @@
     .framework-tabs {
       display: flex;
       gap: 3px;
+      overflow-x: auto;
+      max-width: 100%;
+      padding-bottom: 5px;
     }
 
     .framework-tab {
@@ -273,6 +276,7 @@
       border-radius: var(--border-radius) var(--border-radius) 0 0;
       font-size: 12px;
       transition: all 0.2s ease;
+      white-space: nowrap;
     }
 
     .framework-tab.active {
@@ -333,6 +337,24 @@
     .tab:not(.active) {
       background-color: #363636;
       color: #E5E7EB;
+    }
+
+    /* Scrollbar styling for framework tabs */
+    .framework-tabs::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    .framework-tabs::-webkit-scrollbar-track {
+      background: #2D2D2D;
+    }
+
+    .framework-tabs::-webkit-scrollbar-thumb {
+      background: var(--primary-color);
+      border-radius: 4px;
+    }
+
+    .framework-tabs::-webkit-scrollbar-thumb:hover {
+      background: var(--hover-color);
     }
   </style>
 </head>
