@@ -1,226 +1,89 @@
 function detectFrameworks() {
   const frameworks = [];
 
-  // Enhanced React Detection
+  // React Detection
   if (
-    document.querySelector('[data-reactroot], [data-reactid], [data-react-checksum]') || 
+    document.querySelector('[data-reactroot]') || 
     window.__REACT_DEVTOOLS_GLOBAL_HOOK__ ||
     Array.from(document.scripts).some(script => 
-      script.src.includes('react') || 
-      script.textContent.includes('React') ||
-      script.textContent.includes('ReactDOM')) ||
-    document.querySelector('[class*="react-"]')
+      script.src.includes('react') || script.textContent.includes('React'))
   ) {
     frameworks.push({
       name: 'React',
-      version: window.React ? window.React.version : 'Unknown',
-      features: {
-        hooks: !!document.querySelector('[data-reactroot]'),
-        redux: !!window.__REDUX_DEVTOOLS_EXTENSION__,
-        router: !!document.querySelector('[data-reactrouter]')
-      }
+      version: window.React ? window.React.version : 'Unknown'
     });
   }
 
-  // Enhanced Vue Detection
+  // Vue Detection
   if (
-    document.querySelector('[data-v-], [v-cloak], [v-show], [v-if]') ||
+    document.querySelector('[data-v-]') ||
     window.__VUE__ ||
     Array.from(document.scripts).some(script => 
-      script.src.includes('vue') || 
-      script.textContent.includes('Vue') ||
-      script.textContent.includes('createApp')) ||
-    document.querySelector('.v-enter, .v-leave')
+      script.src.includes('vue') || script.textContent.includes('Vue'))
   ) {
-    const vuexDetected = window.__VUEX__ || document.querySelector('[vuex]');
     frameworks.push({
       name: 'Vue',
-      version: window.Vue ? window.Vue.version : 'Unknown',
-      features: {
-        vuex: !!vuexDetected,
-        router: !!document.querySelector('[data-router-view]'),
-        composition: !!document.querySelector('[data-v-app]')
-      }
+      version: window.Vue ? window.Vue.version : 'Unknown'
     });
   }
 
-  // Enhanced Angular Detection
+  // Angular Detection
   if (
-    document.querySelector('[ng-version], [ng-app], [ng-controller], [ng-model]') ||
+    document.querySelector('[ng-version]') ||
     window.angular ||
     Array.from(document.scripts).some(script => 
-      script.src.includes('angular') ||
-      script.textContent.includes('NgModule')) ||
-    document.querySelector('.ng-animate')
+      script.src.includes('angular'))
   ) {
     frameworks.push({
       name: 'Angular',
-      version: document.querySelector('[ng-version]')?.getAttribute('ng-version') || 'Unknown',
-      features: {
-        animations: !!document.querySelector('.ng-animate'),
-        material: !!document.querySelector('[mat-], [mdInput]'),
-        forms: !!document.querySelector('[formGroup]')
-      }
+      version: document.querySelector('[ng-version]')?.getAttribute('ng-version') || 'Unknown'
     });
   }
 
-  // Enhanced Animation Libraries Detection
-  const animationLibraries = detectAnimationLibraries();
-  frameworks.push(...animationLibraries);
-
-  // Enhanced CSS Framework Detection
-  const cssFrameworks = detectCSSFrameworks();
-  frameworks.push(...cssFrameworks);
-
-  return frameworks;
-}
-
-function detectAnimationLibraries() {
-  const libraries = [];
-
-  // GSAP Detection
-  if (
-    window.gsap || 
-    window.TweenMax || 
-    window.TimelineMax ||
-    document.querySelector('[data-gsap]') ||
-    Array.from(document.scripts).some(script => 
-      script.src.includes('gsap') || 
-      script.textContent.includes('gsap'))
-  ) {
-    libraries.push({
-      name: 'GSAP',
-      version: window.gsap?.version || 'Unknown',
-      features: {
-        scrollTrigger: !!window.ScrollTrigger,
-        morphSVG: !!window.MorphSVGPlugin,
-        motionPath: !!window.MotionPathPlugin
-      }
+  // jQuery Detection
+  if (window.jQuery) {
+    frameworks.push({
+      name: 'jQuery',
+      version: window.jQuery.fn.jquery
     });
   }
 
-  // Anime.js Detection
+  // Bootstrap Detection
   if (
-    window.anime ||
-    document.querySelector('[data-anime]') ||
-    Array.from(document.scripts).some(script => 
-      script.src.includes('anime') || 
-      script.textContent.includes('anime'))
+    document.querySelector('[class*="bootstrap"]') ||
+    Array.from(document.styleSheets).some(sheet => 
+      sheet.href?.includes('bootstrap'))
   ) {
-    libraries.push({
-      name: 'Anime.js',
+    frameworks.push({
+      name: 'Bootstrap',
       version: 'Detected'
     });
   }
 
-  // Lottie Detection
+  // Tailwind Detection
   if (
-    window.lottie ||
-    document.querySelector('lottie-player, [data-lottie]') ||
-    Array.from(document.scripts).some(script => 
-      script.src.includes('lottie') || 
-      script.textContent.includes('lottie'))
-  ) {
-    libraries.push({
-      name: 'Lottie',
-      version: 'Detected',
-      features: {
-        webPlayer: !!document.querySelector('lottie-player'),
-        bodymovin: !!window.bodymovin
-      }
-    });
-  }
-
-  // Three.js Detection
-  if (
-    window.THREE ||
-    document.querySelector('canvas:not([data-engine])') ||
-    Array.from(document.scripts).some(script => 
-      script.src.includes('three') || 
-      script.textContent.includes('THREE'))
-  ) {
-    libraries.push({
-      name: 'Three.js',
-      version: window.THREE?.REVISION || 'Unknown'
-    });
-  }
-
-  return libraries;
-}
-
-function detectCSSFrameworks() {
-  const frameworks = [];
-
-  // Enhanced Bootstrap Detection
-  if (
-    document.querySelector('[class*="bootstrap"], .btn, .container-fluid') ||
+    document.querySelector('[class*="tw-"]') ||
     Array.from(document.styleSheets).some(sheet => 
-      sheet.href?.includes('bootstrap')) ||
-    document.querySelector('.carousel, .modal, .navbar-toggler')
-  ) {
-    frameworks.push({
-      name: 'Bootstrap',
-      version: document.querySelector('link[href*="bootstrap"]')?.href.match(/\d+\.\d+\.\d+/) || 'Detected',
-      features: {
-        grid: !!document.querySelector('.row'),
-        components: !!document.querySelector('.navbar'),
-        utilities: !!document.querySelector('[class*="bg-"], [class*="text-"]')
-      }
-    });
-  }
-
-  // Enhanced Tailwind Detection
-  if (
-    document.querySelector('[class*="tw-"], [class*="space-y-"]') ||
-    Array.from(document.styleSheets).some(sheet => 
-      sheet.href?.includes('tailwind')) ||
-    document.querySelector('[class*="grid-cols-"], [class*="flex-"]')
+      sheet.href?.includes('tailwind'))
   ) {
     frameworks.push({
       name: 'Tailwind',
-      version: 'Detected',
-      features: {
-        jit: !!document.querySelector('[class*="arbitrary-"]'),
-        plugins: detectTailwindPlugins()
-      }
+      version: 'Detected'
     });
   }
 
   return frameworks;
 }
 
-function detectTailwindPlugins() {
-  return {
-    forms: !!document.querySelector('[type="checkbox"].form-checkbox'),
-    typography: !!document.querySelector('.prose'),
-    aspectRatio: !!document.querySelector('[class*="aspect-"]'),
-    lineClamp: !!document.querySelector('[class*="line-clamp-"]')
-  };
-}
-
-// Enhance the extractJavaScript function to capture animation-related code
 async function extractJavaScript() {
   const scripts = [];
   
-  // Extract inline scripts with animation detection
+  // Extract inline scripts
   document.querySelectorAll('script').forEach(script => {
     if (!script.src) {
-      const content = script.textContent;
-      const animationRelated = {
-        hasAnimations: content.includes('animation') || 
-                      content.includes('transition') ||
-                      content.includes('keyframe') ||
-                      content.includes('transform'),
-        hasGSAP: content.includes('gsap') || content.includes('TweenMax'),
-        hasAnime: content.includes('anime'),
-        hasLottie: content.includes('lottie') || content.includes('bodymovin'),
-        hasThreeJS: content.includes('THREE')
-      };
-
       scripts.push({
         type: 'inline',
-        content: content,
-        animationRelated,
+        content: script.textContent,
         attributes: Array.from(script.attributes).reduce((acc, attr) => {
           acc[attr.name] = attr.value;
           return acc;
@@ -235,22 +98,10 @@ async function extractJavaScript() {
     try {
       const response = await fetch(script.src);
       const content = await response.text();
-      const animationRelated = {
-        hasAnimations: content.includes('animation') || 
-                      content.includes('transition') ||
-                      content.includes('keyframe') ||
-                      content.includes('transform'),
-        hasGSAP: content.includes('gsap') || content.includes('TweenMax'),
-        hasAnime: content.includes('anime'),
-        hasLottie: content.includes('lottie') || content.includes('bodymovin'),
-        hasThreeJS: content.includes('THREE')
-      };
-
       scripts.push({
         type: 'external',
         src: script.src,
         content: content,
-        animationRelated,
         attributes: Array.from(script.attributes).reduce((acc, attr) => {
           acc[attr.name] = attr.value;
           return acc;
@@ -272,203 +123,6 @@ async function extractJavaScript() {
   return scripts;
 }
 
-// Add this function to extract complete animation data
-async function extractAnimationData() {
-  const animations = {
-    lottie: [],
-    gsap: [],
-    anime: [],
-    threeJs: [],
-    css: []
-  };
-
-  // Extract Lottie animations with their complete data
-  document.querySelectorAll('lottie-player, [data-lottie]').forEach(async element => {
-    try {
-      const src = element.getAttribute('src');
-      if (src) {
-        const response = await fetch(src);
-        const animationData = await response.json();
-        animations.lottie.push({
-          element: element.outerHTML,
-          data: animationData,
-          config: {
-            container: element,
-            renderer: element.getAttribute('renderer') || 'svg',
-            loop: element.hasAttribute('loop'),
-            autoplay: element.hasAttribute('autoplay'),
-            path: src
-          }
-        });
-      }
-    } catch (e) {
-      console.error('Lottie extraction error:', e);
-    }
-  });
-
-  // Extract GSAP animations with their complete timelines and configurations
-  if (window.gsap) {
-    const gsapElements = document.querySelectorAll('[data-gsap]');
-    gsapElements.forEach(element => {
-      const timeline = window.gsap.getById(element.getAttribute('data-gsap'));
-      if (timeline) {
-        animations.gsap.push({
-          element: element.outerHTML,
-          timeline: timeline.getChildren(),
-          vars: timeline.vars,
-          duration: timeline.duration(),
-          code: extractGSAPCode(element)
-        });
-      }
-    });
-  }
-
-  // Extract Anime.js animations
-  if (window.anime) {
-    document.querySelectorAll('[data-anime]').forEach(element => {
-      const animeInstance = window.anime.get(element);
-      if (animeInstance) {
-        animations.anime.push({
-          element: element.outerHTML,
-          config: animeInstance,
-          targets: animeInstance.targets,
-          code: extractAnimeCode(element)
-        });
-      }
-    });
-  }
-
-  // Extract Three.js scenes
-  if (window.THREE) {
-    document.querySelectorAll('canvas').forEach(canvas => {
-      const renderer = canvas._threeRenderer;
-      if (renderer) {
-        const scene = renderer.scenes?.[0];
-        if (scene) {
-          animations.threeJs.push({
-            canvas: canvas.outerHTML,
-            scene: extractThreeJSScene(scene),
-            renderer: {
-              parameters: renderer.parameters,
-              info: renderer.info
-            },
-            code: extractThreeJSCode(canvas)
-          });
-        }
-      }
-    });
-  }
-
-  // Extract CSS Animations and Transitions
-  document.querySelectorAll('*').forEach(element => {
-    const style = window.getComputedStyle(element);
-    if (style.animation !== 'none' || style.transition !== 'none') {
-      animations.css.push({
-        element: element.outerHTML,
-        animation: style.animation,
-        transition: style.transition,
-        keyframes: extractKeyframes(style.animationName),
-        computedStyles: extractRelevantStyles(element)
-      });
-    }
-  });
-
-  return animations;
-}
-
-// Helper functions for code extraction
-function extractGSAPCode(element) {
-  const scripts = Array.from(document.scripts);
-  let gsapCode = '';
-  
-  scripts.forEach(script => {
-    if (script.textContent.includes('gsap') && 
-        script.textContent.includes(element.id || element.className)) {
-      gsapCode += script.textContent;
-    }
-  });
-  
-  return gsapCode;
-}
-
-function extractAnimeCode(element) {
-  const scripts = Array.from(document.scripts);
-  let animeCode = '';
-  
-  scripts.forEach(script => {
-    if (script.textContent.includes('anime') && 
-        script.textContent.includes(element.id || element.className)) {
-      animeCode += script.textContent;
-    }
-  });
-  
-  return animeCode;
-}
-
-function extractThreeJSScene(scene) {
-  return {
-    children: scene.children.map(child => ({
-      type: child.type,
-      geometry: child.geometry?.parameters,
-      material: child.material?.parameters,
-      position: child.position,
-      rotation: child.rotation,
-      scale: child.scale
-    })),
-    background: scene.background,
-    fog: scene.fog,
-    environment: scene.environment
-  };
-}
-
-function extractThreeJSCode(canvas) {
-  const scripts = Array.from(document.scripts);
-  let threeCode = '';
-  
-  scripts.forEach(script => {
-    if (script.textContent.includes('THREE') && 
-        script.textContent.includes(canvas.id || canvas.className)) {
-      threeCode += script.textContent;
-    }
-  });
-  
-  return threeCode;
-}
-
-function extractKeyframes(animationName) {
-  for (const sheet of document.styleSheets) {
-    try {
-      for (const rule of sheet.cssRules) {
-        if (rule.type === CSSRule.KEYFRAMES_RULE && 
-            rule.name === animationName) {
-          return rule.cssText;
-        }
-      }
-    } catch (e) {
-      console.warn('Could not access stylesheet rules', e);
-    }
-  }
-  return null;
-}
-
-function extractRelevantStyles(element) {
-  const style = window.getComputedStyle(element);
-  const relevantProperties = [
-    'animation', 'animation-delay', 'animation-direction',
-    'animation-duration', 'animation-fill-mode', 'animation-iteration-count',
-    'animation-name', 'animation-play-state', 'animation-timing-function',
-    'transition', 'transition-delay', 'transition-duration',
-    'transition-property', 'transition-timing-function',
-    'transform', 'transform-origin', 'transform-style'
-  ];
-  
-  return relevantProperties.reduce((styles, prop) => {
-    styles[prop] = style.getPropertyValue(prop);
-    return styles;
-  }, {});
-}
-
-// Update the main extractContent function to include animation data
 async function extractContent() {
   try {
     // Function to make URLs absolute
@@ -644,17 +298,13 @@ async function extractContent() {
     // Extract JavaScript
     const scripts = await extractJavaScript();
 
-    // Extract animations
-    const animations = await extractAnimationData();
-
-    // Send the complete data including animations
+    // Send the complete data
     chrome.runtime.sendMessage({
       doctype,
       html: htmlElement.outerHTML,
       styles,
       scripts,
       frameworks,
-      animations, // Add the animations data
       url: window.location.href,
       title: document.title
     });
