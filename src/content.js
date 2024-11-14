@@ -1,89 +1,226 @@
 function detectFrameworks() {
   const frameworks = [];
 
-  // React Detection
+  // Enhanced React Detection
   if (
-    document.querySelector('[data-reactroot]') || 
+    document.querySelector('[data-reactroot], [data-reactid], [data-react-checksum]') || 
     window.__REACT_DEVTOOLS_GLOBAL_HOOK__ ||
     Array.from(document.scripts).some(script => 
-      script.src.includes('react') || script.textContent.includes('React'))
+      script.src.includes('react') || 
+      script.textContent.includes('React') ||
+      script.textContent.includes('ReactDOM')) ||
+    document.querySelector('[class*="react-"]')
   ) {
     frameworks.push({
       name: 'React',
-      version: window.React ? window.React.version : 'Unknown'
+      version: window.React ? window.React.version : 'Unknown',
+      features: {
+        hooks: !!document.querySelector('[data-reactroot]'),
+        redux: !!window.__REDUX_DEVTOOLS_EXTENSION__,
+        router: !!document.querySelector('[data-reactrouter]')
+      }
     });
   }
 
-  // Vue Detection
+  // Enhanced Vue Detection
   if (
-    document.querySelector('[data-v-]') ||
+    document.querySelector('[data-v-], [v-cloak], [v-show], [v-if]') ||
     window.__VUE__ ||
     Array.from(document.scripts).some(script => 
-      script.src.includes('vue') || script.textContent.includes('Vue'))
+      script.src.includes('vue') || 
+      script.textContent.includes('Vue') ||
+      script.textContent.includes('createApp')) ||
+    document.querySelector('.v-enter, .v-leave')
   ) {
+    const vuexDetected = window.__VUEX__ || document.querySelector('[vuex]');
     frameworks.push({
       name: 'Vue',
-      version: window.Vue ? window.Vue.version : 'Unknown'
+      version: window.Vue ? window.Vue.version : 'Unknown',
+      features: {
+        vuex: !!vuexDetected,
+        router: !!document.querySelector('[data-router-view]'),
+        composition: !!document.querySelector('[data-v-app]')
+      }
     });
   }
 
-  // Angular Detection
+  // Enhanced Angular Detection
   if (
-    document.querySelector('[ng-version]') ||
+    document.querySelector('[ng-version], [ng-app], [ng-controller], [ng-model]') ||
     window.angular ||
     Array.from(document.scripts).some(script => 
-      script.src.includes('angular'))
+      script.src.includes('angular') ||
+      script.textContent.includes('NgModule')) ||
+    document.querySelector('.ng-animate')
   ) {
     frameworks.push({
       name: 'Angular',
-      version: document.querySelector('[ng-version]')?.getAttribute('ng-version') || 'Unknown'
+      version: document.querySelector('[ng-version]')?.getAttribute('ng-version') || 'Unknown',
+      features: {
+        animations: !!document.querySelector('.ng-animate'),
+        material: !!document.querySelector('[mat-], [mdInput]'),
+        forms: !!document.querySelector('[formGroup]')
+      }
     });
   }
 
-  // jQuery Detection
-  if (window.jQuery) {
-    frameworks.push({
-      name: 'jQuery',
-      version: window.jQuery.fn.jquery
-    });
-  }
+  // Enhanced Animation Libraries Detection
+  const animationLibraries = detectAnimationLibraries();
+  frameworks.push(...animationLibraries);
 
-  // Bootstrap Detection
+  // Enhanced CSS Framework Detection
+  const cssFrameworks = detectCSSFrameworks();
+  frameworks.push(...cssFrameworks);
+
+  return frameworks;
+}
+
+function detectAnimationLibraries() {
+  const libraries = [];
+
+  // GSAP Detection
   if (
-    document.querySelector('[class*="bootstrap"]') ||
+    window.gsap || 
+    window.TweenMax || 
+    window.TimelineMax ||
+    document.querySelector('[data-gsap]') ||
+    Array.from(document.scripts).some(script => 
+      script.src.includes('gsap') || 
+      script.textContent.includes('gsap'))
+  ) {
+    libraries.push({
+      name: 'GSAP',
+      version: window.gsap?.version || 'Unknown',
+      features: {
+        scrollTrigger: !!window.ScrollTrigger,
+        morphSVG: !!window.MorphSVGPlugin,
+        motionPath: !!window.MotionPathPlugin
+      }
+    });
+  }
+
+  // Anime.js Detection
+  if (
+    window.anime ||
+    document.querySelector('[data-anime]') ||
+    Array.from(document.scripts).some(script => 
+      script.src.includes('anime') || 
+      script.textContent.includes('anime'))
+  ) {
+    libraries.push({
+      name: 'Anime.js',
+      version: 'Detected'
+    });
+  }
+
+  // Lottie Detection
+  if (
+    window.lottie ||
+    document.querySelector('lottie-player, [data-lottie]') ||
+    Array.from(document.scripts).some(script => 
+      script.src.includes('lottie') || 
+      script.textContent.includes('lottie'))
+  ) {
+    libraries.push({
+      name: 'Lottie',
+      version: 'Detected',
+      features: {
+        webPlayer: !!document.querySelector('lottie-player'),
+        bodymovin: !!window.bodymovin
+      }
+    });
+  }
+
+  // Three.js Detection
+  if (
+    window.THREE ||
+    document.querySelector('canvas:not([data-engine])') ||
+    Array.from(document.scripts).some(script => 
+      script.src.includes('three') || 
+      script.textContent.includes('THREE'))
+  ) {
+    libraries.push({
+      name: 'Three.js',
+      version: window.THREE?.REVISION || 'Unknown'
+    });
+  }
+
+  return libraries;
+}
+
+function detectCSSFrameworks() {
+  const frameworks = [];
+
+  // Enhanced Bootstrap Detection
+  if (
+    document.querySelector('[class*="bootstrap"], .btn, .container-fluid') ||
     Array.from(document.styleSheets).some(sheet => 
-      sheet.href?.includes('bootstrap'))
+      sheet.href?.includes('bootstrap')) ||
+    document.querySelector('.carousel, .modal, .navbar-toggler')
   ) {
     frameworks.push({
       name: 'Bootstrap',
-      version: 'Detected'
+      version: document.querySelector('link[href*="bootstrap"]')?.href.match(/\d+\.\d+\.\d+/) || 'Detected',
+      features: {
+        grid: !!document.querySelector('.row'),
+        components: !!document.querySelector('.navbar'),
+        utilities: !!document.querySelector('[class*="bg-"], [class*="text-"]')
+      }
     });
   }
 
-  // Tailwind Detection
+  // Enhanced Tailwind Detection
   if (
-    document.querySelector('[class*="tw-"]') ||
+    document.querySelector('[class*="tw-"], [class*="space-y-"]') ||
     Array.from(document.styleSheets).some(sheet => 
-      sheet.href?.includes('tailwind'))
+      sheet.href?.includes('tailwind')) ||
+    document.querySelector('[class*="grid-cols-"], [class*="flex-"]')
   ) {
     frameworks.push({
       name: 'Tailwind',
-      version: 'Detected'
+      version: 'Detected',
+      features: {
+        jit: !!document.querySelector('[class*="arbitrary-"]'),
+        plugins: detectTailwindPlugins()
+      }
     });
   }
 
   return frameworks;
 }
 
+function detectTailwindPlugins() {
+  return {
+    forms: !!document.querySelector('[type="checkbox"].form-checkbox'),
+    typography: !!document.querySelector('.prose'),
+    aspectRatio: !!document.querySelector('[class*="aspect-"]'),
+    lineClamp: !!document.querySelector('[class*="line-clamp-"]')
+  };
+}
+
+// Enhance the extractJavaScript function to capture animation-related code
 async function extractJavaScript() {
   const scripts = [];
   
-  // Extract inline scripts
+  // Extract inline scripts with animation detection
   document.querySelectorAll('script').forEach(script => {
     if (!script.src) {
+      const content = script.textContent;
+      const animationRelated = {
+        hasAnimations: content.includes('animation') || 
+                      content.includes('transition') ||
+                      content.includes('keyframe') ||
+                      content.includes('transform'),
+        hasGSAP: content.includes('gsap') || content.includes('TweenMax'),
+        hasAnime: content.includes('anime'),
+        hasLottie: content.includes('lottie') || content.includes('bodymovin'),
+        hasThreeJS: content.includes('THREE')
+      };
+
       scripts.push({
         type: 'inline',
-        content: script.textContent,
+        content: content,
+        animationRelated,
         attributes: Array.from(script.attributes).reduce((acc, attr) => {
           acc[attr.name] = attr.value;
           return acc;
@@ -98,10 +235,22 @@ async function extractJavaScript() {
     try {
       const response = await fetch(script.src);
       const content = await response.text();
+      const animationRelated = {
+        hasAnimations: content.includes('animation') || 
+                      content.includes('transition') ||
+                      content.includes('keyframe') ||
+                      content.includes('transform'),
+        hasGSAP: content.includes('gsap') || content.includes('TweenMax'),
+        hasAnime: content.includes('anime'),
+        hasLottie: content.includes('lottie') || content.includes('bodymovin'),
+        hasThreeJS: content.includes('THREE')
+      };
+
       scripts.push({
         type: 'external',
         src: script.src,
         content: content,
+        animationRelated,
         attributes: Array.from(script.attributes).reduce((acc, attr) => {
           acc[attr.name] = attr.value;
           return acc;

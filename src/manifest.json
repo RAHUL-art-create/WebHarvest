@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "WebHarvest",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Extract and analyze webpage source code with preserved structure",
   "permissions": [
     "activeTab",
