@@ -284,20 +284,178 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   showNotification('Extraction complete!');
 });
 
-// Preview button handler
+// Update the preview button handler
 document.getElementById('preview').addEventListener('click', () => {
   if (!extractedData) {
     showNotification('Extract content first!', 'error');
     return;
   }
 
-  const activeTab = document.querySelector('.tab.active');
-  const content = document.getElementById('results').textContent;
-  
-  const blob = new Blob([content], { type: 'text/html' });
-  const previewUrl = URL.createObjectURL(blob);
-  
-  chrome.tabs.create({ url: previewUrl }, (tab) => {
-    URL.revokeObjectURL(previewUrl);
-  });
+  const activeTab = document.querySelector('.tab.active, .framework-tab.active');
+  const type = activeTab.dataset.type;
+  let previewContent = '';
+
+  try {
+    switch (type) {
+      case 'all':
+        // Full page preview with all components
+        previewContent = `
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>${extractedData.title || 'Preview'}</title>
+            <base href="${extractedData.url}">
+            ${extractedData.styles.map(style => 
+              style.type === 'external' ? 
+                `<link rel="stylesheet" href="${style.href}">` :
+                `<style>${style.content}</style>`
+            ).join('\n')}
+            ${extractedData.scripts.map(script => 
+              script.type === 'external' ? 
+                `<script src="${script.src}"></script>` :
+                `<script>${script.content}</script>`
+            ).join('\n')}
+          </head>
+          <body>
+            ${extractedData.html}
+          </body>
+          </html>`;
+        break;
+
+      case 'html':
+        // HTML-only preview with basic styling
+        previewContent = `
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>HTML Preview</title>
+            <style>
+              body { padding: 20px; font-family: sans-serif; }
+            </style>
+          </head>
+          <body>
+            ${extractedData.html}
+          </body>
+          </html>`;
+        break;
+
+      case 'css':
+        // CSS preview with sample elements
+        previewContent = `
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>CSS Preview</title>
+            ${extractedData.styles.map(style => 
+              style.type === 'external' ? 
+                `<link rel="stylesheet" href="${style.href}">` :
+                `<style>${style.content}</style>`
+            ).join('\n')}
+          </head>
+          <body>
+            ${extractedData.html}
+          </body>
+          </html>`;
+        break;
+
+      // Framework-specific previews
+      case 'react':
+      case 'vue':
+      case 'angular':
+      case 'jquery':
+      case 'bootstrap':
+      case 'tailwind':
+        const framework = extractedData.frameworks.find(f => 
+          f.name.toLowerCase() === type
+        );
+        
+        if (framework) {
+          // Include necessary framework dependencies
+          const frameworkCDN = getFrameworkCDN(framework.name, framework.version);
+          
+          previewContent = `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>${framework.name} Preview</title>
+              ${frameworkCDN.css || ''}
+              ${frameworkCDN.js || ''}
+              ${extractedData.styles.map(style => 
+                style.type === 'external' ? 
+                  `<link rel="stylesheet" href="${style.href}">` :
+                  `<style>${style.content}</style>`
+              ).join('\n')}
+            </head>
+            <body>
+              ${extractedData.html}
+              <script>
+                ${extractedData.scripts
+                  .filter(script => 
+                    script.src?.toLowerCase().includes(type) || 
+                    script.content?.includes(framework.name)
+                  )
+                  .map(script => script.content)
+                  .join('\n')}
+              </script>
+            </body>
+            </html>`;
+        }
+        break;
+
+      default:
+        previewContent = document.getElementById('results').textContent;
+    }
+
+    // Create blob and open preview in new tab
+    const blob = new Blob([previewContent], { type: 'text/html' });
+    const previewUrl = URL.createObjectURL(blob);
+    
+    chrome.tabs.create({ url: previewUrl }, (tab) => {
+      URL.revokeObjectURL(previewUrl);
+    });
+
+  } catch (error) {
+    showNotification('Preview generation failed: ' + error.message, 'error');
+    console.error('Preview error:', error);
+  }
 });
+
+// Helper function to get framework CDN links
+function getFrameworkCDN(frameworkName, version) {
+  const cdnLinks = {
+    'React': {
+      js: `
+        <script crossorigin src="https://unpkg.com/react@${version}/umd/react.development.js"></script>
+        <script crossorigin src="https://unpkg.com/react-dom@${version}/umd/react-dom.development.js"></script>
+      `
+    },
+    'Vue': {
+      js: `<script src="https://unpkg.com/vue@${version}"></script>`
+    },
+    'Angular': {
+      js: `
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/${version}/angular.min.js"></script>
+      `
+    },
+    'jQuery': {
+      js: `<script src="https://code.jquery.com/jquery-${version}.min.js"></script>`
+    },
+    'Bootstrap': {
+      css: `<link href="https://cdn.jsdelivr.net/npm/bootstrap@${version}/dist/css/bootstrap.min.css" rel="stylesheet">`,
+      js: `<script src="https://cdn.jsdelivr.net/npm/bootstrap@${version}/dist/js/bootstrap.bundle.min.js"></script>`
+    },
+    'Tailwind': {
+      css: `<script src="https://cdn.tailwindcss.com"></script>`
+    }
+  };
+
+  return cdnLinks[frameworkName] || { css: '', js: '' };
+}
